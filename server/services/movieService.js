@@ -3,17 +3,28 @@ import { queries } from '../sql/queries.js';
 
 export const createMovie = async (title, description, poster_url) => {
   try {
-    const [result] = await pool.query(queries.createMovie, [title, description, poster_url]);
+    if (!title || !description || !poster_url) {
+      throw new Error('Title, description, and poster URL are required');
+    }
+
+    const [result] = await pool.query(queries.createMovie, [title.trim(), description.trim(), poster_url.trim()]);
     return { id: result.insertId, title, description, poster_url };
   } catch (error) {
     throw new Error(error.message);
   }
 };
 
-export const getMovies = async () => {
+export const getMovies = async (search = '') => {
   try {
-    const [rows] = await pool.query(queries.getMovies);
-    return rows.map((row) => ({
+    let rows;
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      [rows] = await pool.query(queries.searchMovies, [searchTerm, searchTerm]);
+    } else {
+      [rows] = await pool.query(queries.getMovies);
+    }
+
+    return rows.map(row => ({
       id: row.id,
       title: row.title,
       description: row.description,
@@ -25,42 +36,45 @@ export const getMovies = async () => {
   }
 };
 
-export const updateMovie = async (movie_id, title, description, poster_url) => {
+export const updateMovie = async (id, title, description, poster_url) => {
   try {
-    // Check if movie exists
-    const [movieRows] = await pool.query(queries.checkMovie, [movie_id]);
+    if (!id || isNaN(id)) {
+      throw new Error('Valid movie ID is required');
+    }
+    if (!title || !description || !poster_url) {
+      throw new Error('Title, description, and poster URL are required');
+    }
+
+    const [movieRows] = await pool.query(queries.checkMovie, [id]);
     if (!movieRows.length) {
       throw new Error('Movie not found');
     }
 
-    // Ensure poster_url is null if undefined
-    const finalPosterUrl = poster_url ?? null;
-
-    // Update movie
-    await pool.query(queries.updateMovie, [title, description, finalPosterUrl, movie_id]);
-    return { id: movie_id, title, description, poster_url: finalPosterUrl };
+    await pool.query(queries.updateMovie, [title.trim(), description.trim(), poster_url.trim(), id]);
+    return { id, title, description, poster_url };
   } catch (error) {
     throw new Error(error.message);
   }
 };
 
-export const deleteMovie = async (movie_id) => {
+export const deleteMovie = async (id) => {
   try {
-    // Check if movie exists
-    const [movieRows] = await pool.query(queries.checkMovie, [movie_id]);
+    if (!id || isNaN(id)) {
+      throw new Error('Valid movie ID is required');
+    }
+
+    const [movieRows] = await pool.query(queries.checkMovie, [id]);
     if (!movieRows.length) {
       throw new Error('Movie not found');
     }
 
-    // Check if movie has associated showtimes
-    const [showtimeRows] = await pool.query(queries.checkMovieShowtimes, [movie_id]);
+    const [showtimeRows] = await pool.query(queries.checkMovieShowtimes, [id]);
     if (showtimeRows.length) {
-      throw new Error('Cannot delete movie with associated showtimes');
+      throw new Error('Cannot delete movie with active showtimes');
     }
 
-    // Delete movie
-    await pool.query(queries.deleteMovie, [movie_id]);
-    return { id: movie_id };
+    await pool.query(queries.deleteMovie, [id]);
+    return { id };
   } catch (error) {
     throw new Error(error.message);
   }
