@@ -14,12 +14,13 @@ export const createMovie = async (title, description, poster_url) => {
   }
 };
 
-export const getMovies = async (search = '') => {
+export const getMovies = async (search = '', genre = null) => {
   try {
     let rows;
-    if (search && search.trim()) {
-      const searchTerm = `%${search.trim()}%`;
-      [rows] = await pool.query(queries.searchMovies, [searchTerm, searchTerm]);
+    if (search || genre) {
+      const searchTerm = search ? `%${search.trim()}%` : null;
+      const genreTerm = genre ? genre.trim() : null;
+      [rows] = await pool.query(queries.searchMovies, [searchTerm, searchTerm, searchTerm, genreTerm, genreTerm]);
     } else {
       [rows] = await pool.query(queries.getMovies);
     }
@@ -32,7 +33,7 @@ export const getMovies = async (search = '') => {
       genres: row.genres ? row.genres.split(',') : []
     }));
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to fetch movies: ${error.message}`);
   }
 };
 

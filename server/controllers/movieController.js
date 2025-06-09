@@ -31,14 +31,16 @@ export const createMovieController = async (req, res, next) => {
   }
 };
 
+
 export const getMoviesController = async (req, res, next) => {
   try {
-    const { search } = req.query;
-    const movies = await getMovies(search);
+    const { search, genre } = req.query;
+    const movies = await getMovies(search, genre);
 
     logger.info('Movies retrieved successfully', {
       count: movies.length,
-      searchQuery: search || 'none'
+      searchQuery: search || 'none',
+      genreQuery: genre || 'none'
     });
 
     res.json({
@@ -48,7 +50,8 @@ export const getMoviesController = async (req, res, next) => {
   } catch (error) {
     logger.error('Failed to retrieve movies', {
       error: error.message,
-      searchQuery: req.query.search || 'none'
+      searchQuery: req.query.search || 'none',
+      genreQuery: req.query.genre || 'none'
     });
     next(error);
   }

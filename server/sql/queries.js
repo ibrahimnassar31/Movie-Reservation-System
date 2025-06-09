@@ -158,5 +158,33 @@ export const queries = {
     ORDER BY created_at DESC
   `,
   checkNotification: 'SELECT * FROM Notifications WHERE id = ? AND user_id = ?',
-  updateNotificationRead: 'UPDATE Notifications SET is_read = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?'
+  updateNotificationRead: 'UPDATE Notifications SET is_read = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+  getReservationStats: `
+    SELECT 
+      COUNT(r.id) AS total_reservations,
+      COALESCE(SUM(r.final_price), 0) AS total_revenue,
+      m.id AS movie_id,
+      m.title AS movie_title,
+      COUNT(r.id) AS reservation_count
+    FROM Reservations r
+    JOIN Showtimes sh ON r.showtime_id = sh.id
+    JOIN Movies m ON sh.movie_id = m.id
+    WHERE (? IS NULL OR sh.showtime >= ?)
+      AND (? IS NULL OR sh.showtime <= ?)
+    GROUP BY m.id, m.title
+    ORDER BY reservation_count DESC
+  `,
+  searchMovies: `
+  SELECT 
+    m.id, m.title, m.description, m.poster_url,
+    GROUP_CONCAT(g.name) AS genres
+  FROM Movies m
+  LEFT JOIN Movie_Genres mg ON m.id = mg.movie_id
+  LEFT JOIN Genres g ON g.id = mg.genre_id
+  WHERE (? IS NULL OR m.title LIKE ? OR m.description LIKE ?)
+    AND (? IS NULL OR g.name = ?)
+  GROUP BY m.id, m.title, m.description, m.poster_url
+  ORDER BY m.id DESC
+`,
+  
 };

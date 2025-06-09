@@ -11,6 +11,7 @@ import seatRoutes from './routes/seatRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import promotionRoutes from './routes/promotionRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { testConnection } from './utils/dbTest.js';
 
@@ -32,6 +33,7 @@ app.use('/api', seatRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api', promotionRoutes);
 app.use('/api', notificationRoutes);
+app.use('/api', reportRoutes);
 app.use(errorHandler);
 
 app.get('/', (req, res) => {

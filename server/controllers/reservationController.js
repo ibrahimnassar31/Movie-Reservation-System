@@ -11,14 +11,15 @@ export const createReservationController = async (req, res, next) => {
     }
 
     const reservationData = await createReservation(user_id, showtime_id, seat_id, promotion_code);
-    
+
     logger.info('Reservation created successfully', {
       reservationId: reservationData.id,
       userId: user_id,
       showtimeId: showtime_id,
       seatId: seat_id,
-      promotionCode: promotion_code || null,
-      finalPrice: reservationData.final_price
+      promotionCode: promotion_code || 'none',
+      finalPrice: reservationData.final_price,
+      emailSent: true
     });
 
     res.status(201).json({
@@ -31,7 +32,8 @@ export const createReservationController = async (req, res, next) => {
       userId: req.user ? req.user.id : null,
       showtimeId: req.body.showtime_id,
       seatId: req.body.seat_id,
-      promotionCode: req.body.promotion_code || null
+      promotionCode: req.body.promotion_code || 'none',
+      emailSent: false
     });
     next(error);
   }
@@ -41,8 +43,8 @@ export const getUserReservationsController = async (req, res, next) => {
   try {
     const user_id = req.user.id;
     const reservations = await getUserReservations(user_id);
-    
-    logger.info('User reservations retrieved', {
+
+    logger.info('User reservations retrieved successfully', {
       userId: user_id,
       count: reservations.length
     });
@@ -70,10 +72,11 @@ export const cancelReservationController = async (req, res, next) => {
     }
 
     const result = await cancelReservation(id, user_id);
-    
+
     logger.info('Reservation cancelled successfully', {
       reservationId: id,
-      userId: user_id
+      userId: user_id,
+      emailSent: true
     });
 
     res.json({
@@ -85,7 +88,8 @@ export const cancelReservationController = async (req, res, next) => {
     logger.error('Failed to cancel reservation', {
       error: error.message,
       reservationId: req.params.id,
-      userId: req.user ? req.user.id : null
+      userId: req.user ? req.user.id : null,
+      emailSent: false
     });
     next(error);
   }

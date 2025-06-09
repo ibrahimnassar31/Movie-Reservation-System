@@ -2,31 +2,25 @@ import pool from '../config/database.js';
 import { queries } from '../sql/queries.js';
 
 export const createNotification = async (user_id, message, type) => {
-  try {
-    // Validate inputs
-    if (!user_id || isNaN(user_id)) {
-      throw new Error('Valid user ID is required');
+    try {
+      if (!user_id || !message || !type) {
+        throw new Error('User ID, message, and type are required');
+      }
+  
+      const is_read = 0; // Default to unread
+      const [result] = await pool.query(queries.createNotification, [user_id, message, type, is_read]);
+  
+      return {
+        id: result.insertId,
+        user_id,
+        message,
+        type,
+        is_read
+      };
+    } catch (error) {
+      throw new Error(`Failed to create notification: ${error.message}`);
     }
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      throw new Error('Valid message is required');
-    }
-    if (!['reservation', 'promotion', 'showtime_change'].includes(type)) {
-      throw new Error('Invalid notification type');
-    }
-
-    // Check if user exists
-    const [userRows] = await pool.query(queries.checkUser, [user_id]);
-    if (!userRows.length) {
-      throw new Error('User not found');
-    }
-
-    const [result] = await pool.query(queries.createNotification, [user_id, message.trim(), type, 0]);
-    return { id: result.insertId, user_id, message, type, is_read: 0 };
-  } catch (error) {
-    throw new Error(error.message);
-  }
-};
-
+  };
 export const getUserNotifications = async (user_id) => {
   try {
     if (!user_id || isNaN(user_id)) {
