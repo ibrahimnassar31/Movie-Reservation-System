@@ -11,7 +11,7 @@ import express from 'express';
    import reviewRoutes from './routes/reviewRoutes.js';
    import promotionRoutes from './routes/promotionRoutes.js';
    import notificationRoutes from './routes/notificationRoutes.js';
-
+   import cors from 'cors';
    import { errorHandler } from './middlewares/errorHandler.js';
    import { apiLimiter, authLimiter } from './middlewares/rateLimit.js';
    import { testConnection } from './utils/dbTest.js';
@@ -19,7 +19,7 @@ import express from 'express';
    config();
 
    const app = express();
-   const port = process.env.PORT || 3000;
+   const port = process.env.PORT || 8000;
 
    app.use(express.json());
 
@@ -43,6 +43,12 @@ import express from 'express';
 
    // Error Handler
    app.use(errorHandler);
+
+    app.use(cors({
+      origin: '*', // السماح للواجهة الأمامية
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
 
    app.get('/', (req, res) => {
      res.send('Movie Reservation Backend is running!');
